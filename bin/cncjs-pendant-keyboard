@@ -116,6 +116,8 @@ var createServer = function(options) {
         var keyboard_main = new hid.HID('/dev/hidraw0');
         var keyboard_extra = new hid.HID('/dev/hidraw1');
 
+        var tool_diameter = 6;
+
         keyboard_main.on("data", function(data) {
             var recv = data.toJSON().data;
             var bits = recv.shift();
@@ -178,6 +180,7 @@ var createServer = function(options) {
                 default:
                     break;
             }
+
             switch (kbdevent.key) {
                 case 80:            // arrow: left
                     relativeMovement("X", "left", kbdevent.move);
@@ -211,13 +214,23 @@ var createServer = function(options) {
                 case 75:            // Key: Page up
                     break;
                 case 27:            // Key: X
+                    var offset = -(tool_diameter/2 + 2)
                     socket.emit('write', options.port, "G38.2 X700\n");
-                    socket.emit('write', options.port, "G92 X-5\n");
+                    socket.emit('write', options.port, "G92 X" + offset + "\n");
                     break;
                 case 28:            // Key: Y
+                    var offset = -(tool_diameter/2 + 2)
                     socket.emit('write', options.port, "G38.2 Y700\n");
-                    socket.emit('write', options.port, "G92 Y-5\n");
+                    socket.emit('write', options.port, "G92 Y" + offset + "\n");
                     break;
+                default:
+                    break;
+            }
+
+            switch (true) {
+                case (kbdevent.key > 20) && (kbdevent.key < 39) :
+                    tool_diameter = kbdevent.key - 30 + 1
+                    socket.emit('write', options.port, "M117 Tool dia: "+ tool_diameter + "mm\n");
                 default:
                     break;
             }
