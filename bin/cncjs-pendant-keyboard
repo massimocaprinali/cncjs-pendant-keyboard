@@ -165,11 +165,15 @@ var createServer = function(options) {
                     socket.emit('write', options.port, "M107\n");
                     break;
                 case 148:       // Key: Home -> Goto Zero-working position
-                    socket.emit('write', options.port, "G90\n");
-                    socket.emit('write', options.port, "G00 X0 Y0 Z0\n");
+                    if(!kbdevent.l_shift) {
+                        socket.emit('write', options.port, "G90\n");
+                        socket.emit('write', options.port, "G00 X0 Y0 Z0\n");
+                    } else {
+                        socket.emit('write', options.port, "G28 Y X\n");
+                    }
                     break;
-                case 205:
-                    socket.emit('write', options.port, kbdevent.l_meta ? "M108\n" : "M0\n");
+                case 205:       // Key: Play/Pause
+                    socket.emit('write', options.port, (kbdevent.l_meta ? "M108\n" : "M0\n"));
                     break;
                 default:
                     break;
@@ -198,6 +202,22 @@ var createServer = function(options) {
                     break;
                 case 40:            // Key: OK or Enter
                     kbdevent.can_repeat = kbdevent.can_repeat ? 0 : 1;
+                    break;
+                case 78:            // Key: Page down
+                    socket.emit('write', options.port, "G28 Z\n");
+                    socket.emit('write', options.port, "G92 Z2\n");
+                    socket.emit('write', options.port, "G00 Z5\n");
+                    break;
+                case 75:            // Key: Page up
+                    break;
+                case 27:            // Key: X
+                    socket.emit('write', options.port, "G38.2 X700\n");
+                    socket.emit('write', options.port, "G92 X-5\n");
+                    break;
+                case 28:            // Key: Y
+                    socket.emit('write', options.port, "G38.2 Y700\n");
+                    socket.emit('write', options.port, "G92 Y-5\n");
+                    break;
                 default:
                     break;
             }
@@ -210,7 +230,7 @@ var createServer = function(options) {
                     kbdevent.repeating = 1;
                     setTimeout(sendToController, 1000);
                 } else {
-                    setTimeout(sendToController, 150);
+                    setTimeout(sendToController, 100);
                 }
             } else {
                 kbdevent.repeating = 0;
