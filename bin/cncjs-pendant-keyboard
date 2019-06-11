@@ -105,8 +105,8 @@ var createServer = function(options) {
             store.sender.status = data;
         });
 
-        var keyboard_main = new hid.HID('0001:0006:00');
-        var keyboard_extra = new hid.HID('0001:0006:01');
+        var keyboard_main = new hid.HID('/dev/hidraw0');
+        var keyboard_extra = new hid.HID('/dev/hidraw1');
 
         keyboard_main.on("data", function(data) {
             var recv = data.toJSON().data;
