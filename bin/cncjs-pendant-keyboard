@@ -185,10 +185,10 @@ var createServer = function(options) {
                     relativeMovement("X", "right", kbdevent.move);
                     break;
                 case 82:            // arrow: up
-                    relativeMovement("Y", "left", kbdevent.move);
+                    relativeMovement("Y", "up", kbdevent.move);
                     break;
                 case 81:            // arrow: down
-                    relativeMovement("Y", "right", kbdevent.move);
+                    relativeMovement("Y", "down", kbdevent.move);
                     break;
                 case 58:            // key: F1
                     kbdevent.default_move = 0.1
