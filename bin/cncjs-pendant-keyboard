@@ -159,20 +159,17 @@ var createServer = function(options) {
                     relativeMovement("Z", "up", kbdevent.move);
                     break;
                 case 131:       // Media: Play (Top corner left)
-                    socket.emit('write', options.port, "G10 L20 P1 X0;\n");
-                    break;
-                case 138:       // E-mail (Top corner left)
-                    socket.emit('write', options.port, "G10 L20 P1 Y0;\n");
+                    socket.emit('write', options.port, "M106 P0\n");
                     break;
                 case 226:       // Mute (Top corner left)
-                    socket.emit('write', options.port, "G10 L20 P1 Z0;\n");
-                    break;
-                case 1:         // Mouse Left (Top corner left)
-                    socket.emit('write', options.port, "G10 L20 P1 X0 Y0 Z0;\n");
+                    socket.emit('write', options.port, "M107\n");
                     break;
                 case 148:       // Key: Home -> Goto Zero-working position
                     socket.emit('write', options.port, "G90\n");
                     socket.emit('write', options.port, "G00 X0 Y0 Z0\n");
+                    break;
+                case 205:
+                    socket.emit('write', options.port, kbdevent.l_meta ? "M108\n" : "M0\n");
                     break;
                 default:
                     break;
