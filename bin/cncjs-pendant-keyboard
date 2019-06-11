@@ -19,7 +19,7 @@ program
 	.option('-b, --baudrate <baudrate>', 'baud rate (default: 115200)', 115200)
 	.option('--socket-address <address>', 'socket address or hostname (default: localhost)', 'localhost')
 	.option('--socket-port <port>', 'socket port (default: 8000)', 8000)
-	.option('--controller-type <type>', 'controller type: Grbl|Smoothie|TinyG (default: Grbl)', 'Grbl')
+	.option('--controller-type <type>', 'controller type: Grbl|Smoothie|TinyG|Marlin (default: Marlin)', 'Marlin')
     .option('--access-token-lifetime <lifetime>', 'access token lifetime in seconds or a time span string (default: 30d)', '30d')
 
 program.parse(process.argv);
@@ -100,6 +100,14 @@ var createServer = function(options) {
             store.controller.settings = settings;
         });
 
+        // Marlin
+        socket.on('Marlin:state', function(state) {
+            store.controller.state = state;
+        });
+        socket.on('Marlin:settings', function(settings) {
+            store.controller.settings = settings;
+        });
+        
         // Sender
         socket.on('sender:status', function(data) {
             store.sender.status = data;
@@ -145,10 +153,10 @@ var createServer = function(options) {
             // Process pressed key
             switch (kbdevent.extra) {
                 case 234:       // vol+
-                    socket.emit('write', options.port, "G91 Z-"+kbdevent.move+";\n");
+                    relativeMovement("Z", "down", kbdevent.move);
                     break;
                 case 233:       // vol-
-                    socket.emit('write', options.port, "G91 Z"+kbdevent.move+";\n");
+                    relativeMovement("Z", "up", kbdevent.move);
                     break;
                 case 131:       // Media: Play (Top corner left)
                     socket.emit('write', options.port, "G10 L20 P1 X0;\n");
@@ -163,23 +171,24 @@ var createServer = function(options) {
                     socket.emit('write', options.port, "G10 L20 P1 X0 Y0 Z0;\n");
                     break;
                 case 148:       // Key: Home -> Goto Zero-working position
-                    socket.emit('write', options.port, "G90 X0 Y0 Z0;\n");
+                    socket.emit('write', options.port, "G90\n");
+                    socket.emit('write', options.port, "G00 X0 Y0 Z0\n");
                     break;
                 default:
                     break;
             }
             switch (kbdevent.key) {
                 case 80:            // arrow: left
-                    socket.emit('write', options.port, "G91 X-"+kbdevent.move+";\n");
+                    relativeMovement("X", "left", kbdevent.move);
                     break;
                 case 79:            // arrow: right
-                    socket.emit('write', options.port, "G91 X"+kbdevent.move+";\n");
+                    relativeMovement("X", "right", kbdevent.move);
                     break;
                 case 82:            // arrow: up
-                    socket.emit('write', options.port, "G91 Y"+kbdevent.move+";\n");
+                    relativeMovement("Y", "left", kbdevent.move);
                     break;
                 case 81:            // arrow: down
-                    socket.emit('write', options.port, "G91 Y-"+kbdevent.move+";\n");
+                    relativeMovement("Y", "right", kbdevent.move);
                     break;
                 case 58:            // key: F1
                     kbdevent.default_move = 0.1
@@ -210,7 +219,13 @@ var createServer = function(options) {
                 kbdevent.repeating = 0;
             }
 
-            console.log(kbdevent);
+            console.log(kbdevent)
+        }
+
+        function relativeMovement(axis, direction, move) {
+            socket.emit('write', options.port, "G91\n");
+            socket.emit('write', options.port, "G00 " + axis + (direction == "left" || direction == "down" ? "-" : "") + move + "\n");
+            socket.emit('write', options.port, "G90\n");
         }
 
     });

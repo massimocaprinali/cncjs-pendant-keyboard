@@ -25,7 +25,7 @@ module.exports = function(options, callback) {
     options.baudrate = get(options, 'baudrate', 115200);
     options.socketAddress = get(options, 'socketAddress', 'localhost');
     options.socketPort = get(options, 'socketPort', 8000);
-    options.controllerType = get(options, 'controllerType', 'Grbl');
+    options.controllerType = get(options, 'controllerType', 'Marlin');
     options.accessTokenLifetime = get(options, 'accessTokenLifetime', '30d');
 
     if (!options.secret) {
