@@ -118,6 +118,8 @@ var createServer = function(options) {
 
         var tool_diameter = 6;
 
+        var feed_percentage = 100;
+
         keyboard_main.on("data", function(data) {
             var recv = data.toJSON().data;
             var bits = recv.shift();
@@ -177,6 +179,20 @@ var createServer = function(options) {
                 case 205:       // Key: Play/Pause
                     socket.emit('write', options.port, (kbdevent.l_meta ? "M108\n" : "M0\n"));
                     break;
+                case 182:       // Key: PREVIOUS_SONG
+                    if(feed_percentage > 1) {
+                        feed_percentage -= 1;
+                        socket.emit('write', options.port, "M220 S"+ feed_percentage + "\n");
+                        socket.emit('write', options.port, "M117 Feedrate "+ feed_percentage + "%\n");
+                    }
+                    break;
+                case 181:       // Key: NEXT_SONG
+                    if(feed_percentage < 100) {
+                        feed_percentage += 10;
+                        socket.emit('write', options.port, "M220 S"+ feed_percentage + "\n");
+                        socket.emit('write', options.port, "M117 Feedrate "+ feed_percentage + "%\n");
+                    }
+                    break;                    
                 default:
                     break;
             }
@@ -222,6 +238,9 @@ var createServer = function(options) {
                     var offset = -(tool_diameter/2 + 2)
                     socket.emit('write', options.port, "G38.2 F150 Y700\n");
                     socket.emit('write', options.port, "G92 Y" + offset + "\n");
+                    break;
+                case 74:
+                    socket.emit('write', options.port, "G92 X0 Y0\n");
                     break;
                 default:
                     break;
