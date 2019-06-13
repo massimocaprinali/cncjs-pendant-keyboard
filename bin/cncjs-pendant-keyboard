@@ -183,14 +183,12 @@ var createServer = function(options) {
                     if(feed_percentage > 1) {
                         feed_percentage -= 1;
                         socket.emit('write', options.port, "M220 S"+ feed_percentage + "\n");
-                        socket.emit('write', options.port, "M117 Feedrate "+ feed_percentage + "%\n");
                     }
                     break;
                 case 181:       // Key: NEXT_SONG
-                    if(feed_percentage < 100) {
+                    if(feed_percentage < 200) {
                         feed_percentage += 10;
                         socket.emit('write', options.port, "M220 S"+ feed_percentage + "\n");
-                        socket.emit('write', options.port, "M117 Feedrate "+ feed_percentage + "%\n");
                     }
                     break;                    
                 default:
