@@ -231,11 +231,13 @@ var createServer = function(options) {
                     var offset = -(tool_diameter/2 + 2)
                     socket.emit('write', options.port, "G38.2 F150 X700\n");
                     socket.emit('write', options.port, "G92 X" + offset + "\n");
+                    socket.emit('write', options.port, "F3000\n");
                     break;
                 case 28:            // Key: Y
                     var offset = -(tool_diameter/2 + 2)
                     socket.emit('write', options.port, "G38.2 F150 Y700\n");
                     socket.emit('write', options.port, "G92 Y" + offset + "\n");
+                    socket.emit('write', options.port, "F3000\n");
                     break;
                 case 74:
                     socket.emit('write', options.port, "G92 X0 Y0\n");
