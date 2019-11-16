@@ -8,6 +8,7 @@ var inquirer = require('inquirer');
 var pkg = require('../package.json');
 var serverMain = require('../index');
 var hid = require("node-hid");
+var convert = require('convert-units');
 var options = {};
 
 program
@@ -117,6 +118,7 @@ var createServer = function(options) {
         var keyboard_extra = new hid.HID('/dev/hidraw1');
 
         var tool_diameter = 6;
+        var homing_unit = 'mm';
 
         var feed_percentage = 100;
 
@@ -168,7 +170,7 @@ var createServer = function(options) {
                 case 226:       // Mute (Top corner left)
                     socket.emit('write', options.port, "M107\n");
                     break;
-                case 148:       // Key: Home -> Goto Zero-working position
+                case 148:       // Key: Home (Casa) -> Goto Zero-working position
                     if(!kbdevent.l_shift) {
                         socket.emit('write', options.port, "G90\n");
                         socket.emit('write', options.port, "G00 X0 Y0 Z0\n");
@@ -222,24 +224,24 @@ var createServer = function(options) {
                     break;
                 case 78:            // Key: Page down
                     socket.emit('write', options.port, "G28 Z\n");
-                    socket.emit('write', options.port, "G92 Z2\n");
+                    socket.emit('write', options.port, "G92 Z1.9\n");
                     socket.emit('write', options.port, "G00 Z5\n");
                     break;
                 case 75:            // Key: Page up
                     break;
                 case 27:            // Key: X
-                    var offset = -(tool_diameter/2 + 2)
+                    var offset = -((convert(tool_diameter).from(homing_unit).to('mm'))/2 + 2);
                     socket.emit('write', options.port, "G38.2 F150 X700\n");
                     socket.emit('write', options.port, "G92 X" + offset + "\n");
                     socket.emit('write', options.port, "F3000\n");
                     break;
                 case 28:            // Key: Y
-                    var offset = -(tool_diameter/2 + 2)
-                    socket.emit('write', options.port, "G38.2 F150 Y700\n");
+                    var offset = -((convert(tool_diameter).from(homing_unit).to('mm'))/2 + 2);
+                    socket.emit('write', options.port, "G38.2 F150 Y700\n");                
                     socket.emit('write', options.port, "G92 Y" + offset + "\n");
                     socket.emit('write', options.port, "F3000\n");
                     break;
-                case 74:
+                case 74: // Key: Home
                     socket.emit('write', options.port, "G92 X0 Y0\n");
                     break;
                 default:
@@ -248,8 +250,15 @@ var createServer = function(options) {
 
             switch (true) {
                 case (kbdevent.key > 30) && (kbdevent.key < 41) :
-                    tool_diameter = kbdevent.key - 30 + 1
-                    socket.emit('write', options.port, "M117 Tool dia: "+ tool_diameter + "mm\n");
+                    var new_diameter = kbdevent.key - 30 + 1
+                    if(new_diameter == tool_diameter) {
+                        homing_unit = 'in';
+                        tool_diameter = (1 / new_diameter);
+                    } else {
+                        homing_unit = 'mm';
+                        tool_diameter = new_diameter;
+                    }
+                    socket.emit('write', options.port, "M117 Tool dia: "+ tool_diameter + homing_unit+"\n");
                 default:
                     break;
             }

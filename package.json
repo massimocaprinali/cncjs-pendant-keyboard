@@ -30,12 +30,13 @@
   "homepage": "https://github.com/nsfilho/cncjs-pendant-keyboard#readme",
   "dependencies": {
     "commander": "^2.9.0",
+    "convert-units": "^2.3.4",
     "inquirer": "^3.0.1",
     "jsonwebtoken": "^7.2.1",
     "lodash.get": "^4.4.2",
+    "node-hid": "^0.7.9 --build-from-source",
     "serialport": "^4.0.7",
     "socket.io-client": "^1.7.2",
-    "vorpal": "^1.11.4",
-    "node-hid" : "^0.7.9 --build-from-source"
+    "vorpal": "^1.11.4"
   }
 }
