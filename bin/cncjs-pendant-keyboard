@@ -219,12 +219,15 @@ var createServer = function(options) {
                 case 60:            // key: F3
                     kbdevent.default_move = 10
                     break;
+		case 61:	    // key: F4
+		    kbdevent.default_move = 100
+		    break;
                 case 40:            // Key: OK or Enter
                     kbdevent.can_repeat = kbdevent.can_repeat ? 0 : 1;
                     break;
                 case 78:            // Key: Page down
                     socket.emit('write', options.port, "G28 Z\n");
-                    socket.emit('write', options.port, "G92 Z1.9\n");
+                    socket.emit('write', options.port, "G92 Z2.52\n");
                     socket.emit('write', options.port, "G00 Z5\n");
                     break;
                 case 75:            // Key: Page up
