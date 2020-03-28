@@ -131,8 +131,8 @@ var createServer = function(options) {
                 .devices()
                 .find(
                     item =>
-                        item.vendorId === 26881 &&
-                        item.productId === 9985 &&
+                        item.vendorId === 6551 &&
+                        item.productId === 9267 &&
                         item.interface === interface
                 ).path;
 
