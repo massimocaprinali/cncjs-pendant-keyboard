@@ -253,8 +253,8 @@ var createServer = function(options) {
                     break;
                 case 78:            // Key: Page down
                     socket.emit('write', options.port, "G28 Z\n");
-                    socket.emit('write', options.port, "G92 Z2.52\n");
-                    socket.emit('write', options.port, "G00 Z5\n");
+                    socket.emit('write', options.port, "G92 Z5\n");
+                    socket.emit('write', options.port, "G00 Z10\n");
                     break;
                 case 75:            // Key: Page up
                     break;
