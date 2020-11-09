@@ -281,19 +281,18 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G92 Y" + offset + "\n");
           socket.emit("write", options.port, "F3000\n");
           break;
-        case keys.HOME: // Key: Home
+        case keys.ZERO: // Key: Home
           socket.emit("write", options.port, "G92 X0 Y0\n");
           break;
         default:
           break;
       }
 
-      switch (true) {
-        case kbdevent.key > 30 && kbdevent.key < 41:
-          var new_diameter = kbdevent.key - 30 + 1;
+      if( kbdevent.key >= keys.ONE && kbdevent.key <= keys.NINE ) {
+        var new_diameter = kbdevent.key - keys.ONE + 1;
           if (new_diameter == tool_diameter) {
             homing_unit = "in";
-            tool_diameter = 1 / new_diameter;
+            tool_diameter = decimalToFraction(1 / new_diameter).display;
           } else {
             homing_unit = "mm";
             tool_diameter = new_diameter;
@@ -301,10 +300,8 @@ var createServer = function (options) {
           socket.emit(
             "write",
             options.port,
-            "M117 Tool dia: " + tool_diameter + homing_unit + "\n"
+            `M117 Tool Ø: ${tool_diameter} ${homing_unit}`
           );
-        default:
-          break;
       }
 
       if (
@@ -339,6 +336,27 @@ var createServer = function (options) {
       );
       socket.emit("write", options.port, "G90\n");
     }
+
+    function gcd(a, b) {
+      return (b) ? gcd(b, a % b) : a;
+    }
+
+    var decimalToFraction = function (_decimal) {
+      var top		= _decimal.toString().replace(/\d+[.]/, '');
+      console.log(top);
+      var bottom	= Math.pow(10, top.length);
+      if (_decimal > 1) {
+        top	= +top + Math.floor(_decimal) * bottom;
+      }
+      var x = gcd(top, bottom);
+      return {
+        top		: (top / x),
+        bottom	: (bottom / x),
+        display	: (top / x) + '/' + (bottom / x)
+      };
+    };
+
+
   });
 };
 
