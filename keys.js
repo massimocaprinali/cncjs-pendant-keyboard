@@ -68,5 +68,7 @@ module.exports = {
     ESCAPE: 41,
     HOME: 74,
     END: 77,
-    PRINT: 70
+    PRINT: 70,
+    PLUS: 48,
+    MINUS: 56
 }

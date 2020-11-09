@@ -141,6 +141,9 @@ var createServer = function (options) {
     var tool_diameter = 6;
     var homing_unit = "mm";
     var feed_percentage = 100;
+    var feed_percentage_increment = 10;
+    var min_feed = 50;
+    var max_feed = 300;
 
     keyboard_main.on("data", function (data) {
       var recv = data.toJSON().data;
@@ -207,8 +210,8 @@ var createServer = function (options) {
           );
           break;
         case extraKeys.PREVIOUS: // Key: PREVIOUS_SONG
-          if (feed_percentage > 1) {
-            feed_percentage -= 1;
+          if (feed_percentage >= min_feed + feed_percentage_increment) {
+            feed_percentage -= feed_percentage_increment;
             socket.emit(
               "write",
               options.port,
@@ -217,8 +220,8 @@ var createServer = function (options) {
           }
           break;
         case extraKeys.NEXT: // Key: NEXT_SONG
-          if (feed_percentage < 200) {
-            feed_percentage += 10;
+          if (feed_percentage <= max_feed - feed_percentage_increment) {
+            feed_percentage += feed_percentage_increment;
             socket.emit(
               "write",
               options.port,
