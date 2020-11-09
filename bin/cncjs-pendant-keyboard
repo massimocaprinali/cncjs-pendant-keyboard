@@ -11,6 +11,8 @@ var hid = require("node-hid");
 var convert = require("convert-units");
 var keys = require("../keys");
 var extraKeys = require("../extraKeys");
+var Mustache = require("Mustache");
+const { command } = require("commander");
 var options = {};
 
 program
@@ -195,12 +197,8 @@ var createServer = function (options) {
           break;
         case extraKeys.HOME:
           // Key: Home (Casa) -> Goto Zero-working position
-          if (!kbdevent.l_shift) {
-            socket.emit("write", options.port, "G90\n");
-            socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
-          } else {
-            socket.emit("write", options.port, "G28 Y X\n");
-          }
+          socket.emit("write", options.port, "G90\n");
+          socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
           break;
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
           socket.emit(
@@ -229,6 +227,15 @@ var createServer = function (options) {
             );
           }
           break;
+        case extraKeys.SEARCH: // FIND EDGE
+          var view = {
+            margin: 20,
+            plateThickness: 5,
+            offset: function () {
+              return -(convert(tool_diameter).from(homing_unit).to("mm") / 2) - plateThickness
+            },
+          };
+          executeGCode("../gcode/findedge.gcode", view)
         default:
           break;
       }
@@ -287,23 +294,29 @@ var createServer = function (options) {
         case keys.ZERO: // Key: Home
           socket.emit("write", options.port, "G92 X0 Y0\n");
           break;
+        case keys.HOME:
+          socket.emit("write", options.port, "G28 Y X\n");
         default:
           break;
       }
 
       if( kbdevent.key >= keys.ONE && kbdevent.key <= keys.NINE ) {
         var new_diameter = kbdevent.key - keys.ONE + 1;
+        var tool_diameter_display;
           if (new_diameter == tool_diameter) {
             homing_unit = "in";
-            tool_diameter = decimalToFraction(1 / new_diameter).display;
+            tool_diameter = 1 / new_diameter;
+            tool_diameter_display = decimalToFraction(tool_diameter).display;
+            
           } else {
             homing_unit = "mm";
             tool_diameter = new_diameter;
+            tool_diameter_display = tool_diameter;
           }
           socket.emit(
             "write",
             options.port,
-            `M117 Tool Ø: ${tool_diameter} ${homing_unit}`
+            `M117 Tool Ø: ${tool_diameter_display} ${homing_unit}`
           );
       }
 
@@ -359,6 +372,16 @@ var createServer = function (options) {
       };
     };
 
+    function executeGCode(file, view) {
+      fetch(file)
+        .then((response) => response.text())
+        .then((template) => {
+          var rendered = Mustache.render(template, view);
+          console.log(rendered);
+          var commands = rendered.split("\n");
+          commands.forEach(cmd => socket.emit("write", options.port, cmd + "\n"));
+        });
+    }
 
   });
 };
