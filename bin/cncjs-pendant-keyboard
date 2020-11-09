@@ -12,7 +12,6 @@ var convert = require("convert-units");
 var keys = require("../keys");
 var extraKeys = require("../extraKeys");
 const mustache = require("mustache");
-const fetch = require("node-fetch");
 const { command } = require("commander");
 var options = {};
 
@@ -132,10 +131,14 @@ var createServer = function (options) {
     });
 
     const findPath = (interface) =>
-      hid.devices().find((item) =>
+      hid
+        .devices()
+        .find(
+          (item) =>
             item.vendorId === 6551 &&
             item.productId === 9267 &&
-            item.interface === interface).path;
+            item.interface === interface
+        ).path;
 
     console.log("Keyboard HID Address:", findPath(0), " & ", findPath(1));
     var keyboard_main = new hid.HID(findPath(0));
@@ -233,10 +236,13 @@ var createServer = function (options) {
             margin: 20,
             plateThickness: 5,
             offset: function () {
-              return -(convert(tool_diameter).from(homing_unit).to("mm") / 2) - plateThickness
+              return (
+                -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
+                plateThickness
+              );
             },
           };
-          executeGCode("../gcode/findedge.gcode", view)
+          executeGCode("../gcode/findedge.gcode", view);
         default:
           break;
       }
@@ -301,24 +307,23 @@ var createServer = function (options) {
           break;
       }
 
-      if( kbdevent.key >= keys.ONE && kbdevent.key <= keys.NINE ) {
+      if (kbdevent.key >= keys.ONE && kbdevent.key <= keys.NINE) {
         var new_diameter = kbdevent.key - keys.ONE + 1;
         var tool_diameter_display;
-          if (new_diameter == tool_diameter) {
-            homing_unit = "in";
-            tool_diameter = 1 / new_diameter;
-            tool_diameter_display = decimalToFraction(tool_diameter).display;
-            
-          } else {
-            homing_unit = "mm";
-            tool_diameter = new_diameter;
-            tool_diameter_display = tool_diameter;
-          }
-          socket.emit(
-            "write",
-            options.port,
-            `M117 Tool Ø: ${tool_diameter_display} ${homing_unit}`
-          );
+        if (new_diameter == tool_diameter) {
+          homing_unit = "in";
+          tool_diameter = 1 / new_diameter;
+          tool_diameter_display = decimalToFraction(tool_diameter).display;
+        } else {
+          homing_unit = "mm";
+          tool_diameter = new_diameter;
+          tool_diameter_display = tool_diameter;
+        }
+        socket.emit(
+          "write",
+          options.port,
+          `M117 Tool Ø: ${tool_diameter_display} ${homing_unit}`
+        );
       }
 
       if (
@@ -355,35 +360,38 @@ var createServer = function (options) {
     }
 
     function gcd(a, b) {
-      return (b) ? gcd(b, a % b) : a;
+      return b ? gcd(b, a % b) : a;
     }
 
     var decimalToFraction = function (_decimal) {
-      var top		= _decimal.toString().replace(/\d+[.]/, '');
+      var top = _decimal.toString().replace(/\d+[.]/, "");
       console.log(top);
-      var bottom	= Math.pow(10, top.length);
+      var bottom = Math.pow(10, top.length);
       if (_decimal > 1) {
-        top	= +top + Math.floor(_decimal) * bottom;
+        top = +top + Math.floor(_decimal) * bottom;
       }
       var x = gcd(top, bottom);
       return {
-        top		: (top / x),
-        bottom	: (bottom / x),
-        display	: (top / x) + '/' + (bottom / x)
+        top: top / x,
+        bottom: bottom / x,
+        display: top / x + "/" + bottom / x,
       };
     };
 
     function executeGCode(file, view) {
-      fetch(file)
-        .then((response) => response.text())
-        .then((template) => {
-          var rendered = mustache.render(template, view);
-          console.log(rendered);
-          var commands = rendered.split("\n");
-          commands.forEach(cmd => socket.emit("write", options.port, cmd + "\n"));
-        });
+      fs.readFile(file, (error, template) => {
+        if (error) {
+          console.error(error);
+          return;
+        }
+        var rendered = mustache.render(template, view);
+        console.log(rendered);
+        var commands = rendered.split("\n");
+        commands.forEach((cmd) =>
+          socket.emit("write", options.port, cmd + "\n")
+        );
+      });
     }
-
   });
 };
 
