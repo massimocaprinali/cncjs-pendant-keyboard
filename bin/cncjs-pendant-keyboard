@@ -235,7 +235,6 @@ var createServer = function (options) {
           }
           break;
         case extraKeys.SEARCH: // FIND EDGE
-          
           var view = {
             margin: 20,
             plateThickness: PLATE_THICKNESS,
@@ -322,11 +321,7 @@ var createServer = function (options) {
           tool_diameter = new_diameter;
           tool_diameter_display = tool_diameter;
         }
-        socket.emit(
-          "write",
-          options.port,
-          `M117 Tool Ø: ${tool_diameter_display} ${homing_unit}`
-        );
+        socket.emit("write", options.port,`M117 Tool Ø: ${tool_diameter_display} ${homing_unit}`);
       }
 
       if (
@@ -344,8 +339,6 @@ var createServer = function (options) {
       } else {
         kbdevent.repeating = 0;
       }
-
-      console.log(kbdevent);
     }
 
     function relativeMovement(axis, direction, move) {
@@ -368,7 +361,6 @@ var createServer = function (options) {
 
     var decimalToFraction = function (_decimal) {
       var top = _decimal.toString().replace(/\d+[.]/, "");
-      console.log(top);
       var bottom = Math.pow(10, top.length);
       if (_decimal > 1) {
         top = +top + Math.floor(_decimal) * bottom;
@@ -388,7 +380,6 @@ var createServer = function (options) {
           return;
         }
         var rendered = mustache.render(template, view);
-        console.log(rendered);
         var commands = rendered.split("\n");
         commands.forEach((cmd) =>
           socket.emit("write", options.port, cmd + "\n")
@@ -397,9 +388,6 @@ var createServer = function (options) {
     }
   });
 };
-
-// console.log('List of connected devices (paths): ');
-// console.log('devices:', hid.devices());
 
 if (options.port) {
   createServer(options);
