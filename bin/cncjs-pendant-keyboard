@@ -379,7 +379,7 @@ var createServer = function (options) {
     };
 
     function executeGCode(file, view) {
-      fs.readFile(file, (error, template) => {
+      fs.readFile(file, 'utf8', (error, template) => {
         if (error) {
           console.error(error);
           return;
