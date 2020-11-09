@@ -37,6 +37,7 @@
     "node-hid": "^0.7.9",
     "serialport": "^4.0.7",
     "socket.io-client": "^1.7.2",
-    "vorpal": "^1.11.4"
+    "vorpal": "^1.11.4",
+    "mustache": "^4.0.1"
   }
 }
