@@ -321,7 +321,7 @@ var createServer = function (options) {
           tool_diameter = new_diameter;
           tool_diameter_display = tool_diameter;
         }
-        socket.emit("write", options.port,`M117 Tool Ø: ${tool_diameter_display} ${homing_unit}`);
+        socket.emit("write", options.port,`M117 Tool Ø: ${tool_diameter_display} ${homing_unit}\n`);
       }
 
       if (
