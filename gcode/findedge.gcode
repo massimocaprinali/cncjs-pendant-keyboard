@@ -1,10 +1,10 @@
-G38.2 Z-15 F100
+G38.2 F100 Z-15
 G92 Z{{plateThickness}}
 G91
 G0 Z3 F900
 G0 X-{{margin}} F1500
 G0 Z-6 F900
-G38.2 X50 F100
+G38.2 F100 X50
 G92 X{{offset}}
 G91
 G0 X-3 F1500
@@ -12,7 +12,7 @@ G0 Z6 F900
 G0 Y-{{margin}} F1500
 G0 X{{margin}} F1500
 G0 Z-6 F900
-G38.2 Y50 F100
+G38.2 F100 Y50
 G92 Y{{offset}}
 G91
 G0 Y-3 F1500
