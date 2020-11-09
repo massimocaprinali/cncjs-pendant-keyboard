@@ -384,6 +384,7 @@ var createServer = function (options) {
         commands.forEach((cmd) =>
           socket.emit("write", options.port, cmd + "\n")
         );
+        setTimeout(function() {}, 500);
       });
     }
   });
