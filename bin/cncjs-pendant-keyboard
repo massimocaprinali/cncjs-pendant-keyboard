@@ -11,7 +11,7 @@ var hid = require("node-hid");
 var convert = require("convert-units");
 var keys = require("../keys");
 var extraKeys = require("../extraKeys");
-var Mustache = require("Mustache");
+const mustache = require("mustache"); 
 const { command } = require("commander");
 var options = {};
 
@@ -376,7 +376,7 @@ var createServer = function (options) {
       fetch(file)
         .then((response) => response.text())
         .then((template) => {
-          var rendered = Mustache.render(template, view);
+          var rendered = mustache.render(template, view);
           console.log(rendered);
           var commands = rendered.split("\n");
           commands.forEach(cmd => socket.emit("write", options.port, cmd + "\n"));
