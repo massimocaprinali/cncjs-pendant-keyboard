@@ -1,13 +1,16 @@
-var fs = require("fs");
+const fs = require("fs");
+const path = require('path');
 const mustache = require("mustache");
 
+const gcodePath = path.join(__dirname, '../gcode');
+console.log(gcodePath);  
 var view = {
     margin: 20,
     plateThickness: 5,
     offset: -8,
   };
 
-  executeGCode("../gcode/findedge.gcode", view);
+  executeGCode(path.join(gcodePath, "findedge.gcode"), view);
 
 function executeGCode(file, view) {
     fs.readFile(file, 'utf8', (error, template) => {

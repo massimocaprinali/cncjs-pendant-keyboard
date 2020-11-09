@@ -14,6 +14,9 @@ var extraKeys = require("../extraKeys");
 const mustache = require("mustache");
 const { command } = require("commander");
 var options = {};
+var gcodeFolder = path.join(__dirname, "../gcode");
+
+const PLATE_THICKNESS = 5;
 
 program
   .version(pkg.version)
@@ -232,17 +235,17 @@ var createServer = function (options) {
           }
           break;
         case extraKeys.SEARCH: // FIND EDGE
+          
           var view = {
             margin: 20,
-            plateThickness: 5,
+            plateThickness: PLATE_THICKNESS,
             offset: function () {
               return (
-                -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
-                plateThickness
+                -(convert(tool_diameter).from(homing_unit).to("mm") / 2) - PLATE_THICKNESS
               );
             },
           };
-          executeGCode("../gcode/findedge.gcode", view);
+          executeGCode(path.join(gcodeFolder,"findedge.gcode"), view);
         default:
           break;
       }
