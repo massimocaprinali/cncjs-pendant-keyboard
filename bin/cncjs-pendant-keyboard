@@ -388,7 +388,7 @@ var createServer = function (options) {
         var commands = rendered.split("\n");
         commands.forEach((cmd) => {
           socket.emit("write", options.port, cmd + "\n");
-          setTimeout(function () {}, 500);
+          setTimeout(function () {console.log("wait 3 seconds...")}, 3000);
         });
       });
     }
