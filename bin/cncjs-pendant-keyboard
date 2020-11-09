@@ -11,7 +11,7 @@ var hid = require("node-hid");
 var convert = require("convert-units");
 var keys = require("../keys");
 var extraKeys = require("../extraKeys");
-var Mustache = require("Mustache");
+const template = require("mustache"); 
 const { command } = require("commander");
 var options = {};
 
