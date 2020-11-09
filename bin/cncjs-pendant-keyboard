@@ -379,17 +379,15 @@ var createServer = function (options) {
     };
 
     function executeGCode(file, view) {
-      fs.readFile(file, "utf8", (error, template) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
-        var rendered = mustache.render(template, view);
-        var commands = rendered.split("\n");
-        commands.forEach((cmd) => {
-          socket.emit("write", options.port, cmd + "\n");
-          setTimeout(function () {console.log("wait 3 seconds...")}, 3000);
-        });
+      var template = fs.readFileSync(file, "utf8");
+
+      var rendered = mustache.render(template, view);
+      var commands = rendered.split("\n");
+      commands.forEach((cmd) => {
+        socket.emit("write", options.port, cmd + "\n");
+        setTimeout(function () {
+          console.log("wait 3 seconds...");
+        }, 3000);
       });
     }
   });
