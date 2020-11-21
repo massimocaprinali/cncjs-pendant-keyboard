@@ -279,7 +279,7 @@ var createServer = function (options) {
           kbdevent.can_repeat = kbdevent.can_repeat ? 0 : 1;
           break;
         case keys.PAGE_DOWN: // Key: Page down
-          socket.emit("write", options.port, "G38.2 Z-25 F20\n");
+          socket.emit("write", options.port, "G28 Z\n");
           socket.emit("write", options.port, "G92 Z5\n");
           socket.emit("write", options.port, "G00 Z10\n");
           break;
@@ -384,7 +384,10 @@ var createServer = function (options) {
       var rendered = mustache.render(template, view);
       var commands = rendered.split("\n");
       commands.forEach((cmd) => {
-        socket.emit("write", options.port, cmd + "\n");
+        socket.emit("write", options.port, cmd + "\n", (data) => {
+          console.log(data); // data will be 'woot'
+        });
+       
       });
     }
   });
