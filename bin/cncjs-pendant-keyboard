@@ -18,6 +18,9 @@ var gcodeFolder = path.join(__dirname, "../gcode");
 var status
 
 const PLATE_THICKNESS = 5;
+const WORKFLOW_STATE_RUNNING = 'running';
+const WORKFLOW_STATE_PAUSED = 'paused';
+const WORKFLOW_STATE_IDLE = 'idle';
 
 program
   .version(pkg.version)
@@ -72,6 +75,9 @@ var store = {
   controller: {
     state: {},
     settings: {},
+    workflow: {
+      state: null
+    }
   },
   sender: {
     status: {},
@@ -123,7 +129,7 @@ var createServer = function (options) {
 
     // Marlin
     socket.on("Marlin:state", function (state) {
-      console.log("Marlin:state=>" + state)
+      console.log("Marlin:state=>" + JSON.stringify(state))
       store.controller.state = state;
     });
     socket.on("Marlin:settings", function (settings) {
@@ -132,13 +138,14 @@ var createServer = function (options) {
 
     // Sender
     socket.on("sender:status", function (data) {
-      console.log("sender:status=>" + data);
+      console.log("sender:status=>" + JSON.stringify(data));
       store.sender.status = data;
     });
 
     // Workflow state
     socket.on("workflow:state", function(state) {
       console.log("workflow:state=>" + state);
+      store.controller.workflow.state = state;
     });
 
     const findPath = (interface) =>
@@ -217,13 +224,11 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
           break;
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
-          if(state === "idle") {
+          if(store.controller.workflow.state === WORKFLOW_STATE_IDLE) {
             socket.emit('command', options.port, 'gcode:start');
-          }
-          else if(state === "running"){
+          } else if(store.controller.workflow.state === WORKFLOW_STATE_RUNNING){
             socket.emit('command', options.port, 'gcode:pause');
-          }
-          else if(state === "paused"){
+          } else if(store.controller.workflow.state === WORKFLOW_STATE_PAUSED){
             socket.emit('command', options.port, 'gcode:resume');
           }
           break;
