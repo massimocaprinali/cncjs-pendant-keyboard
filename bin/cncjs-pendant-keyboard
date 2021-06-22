@@ -153,6 +153,7 @@ var createServer = function (options) {
     var feed_percentage_increment = 10;
     var min_feed = 50;
     var max_feed = 300;
+    var probe_size = 5;
 
     keyboard_main.on("data", function (data) {
       var recv = data.toJSON().data;
@@ -286,7 +287,7 @@ var createServer = function (options) {
         case keys.X: // Key: X
           var offset = -(
             convert(tool_diameter).from(homing_unit).to("mm") / 2 +
-            2
+            probe_size
           );
           socket.emit("write", options.port, "G38.2 F150 X700\n");
           socket.emit("write", options.port, "G92 X" + offset + "\n");
@@ -295,7 +296,7 @@ var createServer = function (options) {
         case keys.Y: // Key: Y
           var offset = -(
             convert(tool_diameter).from(homing_unit).to("mm") / 2 +
-            2
+            probe_size
           );
           socket.emit("write", options.port, "G38.2 F150 Y700\n");
           socket.emit("write", options.port, "G92 Y" + offset + "\n");
