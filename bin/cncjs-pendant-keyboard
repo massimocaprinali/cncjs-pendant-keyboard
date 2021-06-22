@@ -15,6 +15,7 @@ const mustache = require("mustache");
 const { command } = require("commander");
 var options = {};
 var gcodeFolder = path.join(__dirname, "../gcode");
+var status
 
 const PLATE_THICKNESS = 5;
 
@@ -122,6 +123,7 @@ var createServer = function (options) {
 
     // Marlin
     socket.on("Marlin:state", function (state) {
+      console.log("Marlin:state=>" + state)
       store.controller.state = state;
     });
     socket.on("Marlin:settings", function (settings) {
@@ -130,7 +132,13 @@ var createServer = function (options) {
 
     // Sender
     socket.on("sender:status", function (data) {
+      console.log("sender:status=>" + data);
       store.sender.status = data;
+    });
+
+    // Workflow state
+    socket.on("workflow:state", function(state) {
+      console.log("workflow:state=>" + state);
     });
 
     const findPath = (interface) =>
@@ -209,11 +217,15 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
           break;
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
-          socket.emit(
-            "write",
-            options.port,
-            kbdevent.l_meta ? "M108\n" : "M0\n"
-          );
+          if(state === "idle") {
+            socket.emit('command', options.port, 'gcode:start');
+          }
+          else if(state === "running"){
+            socket.emit('command', options.port, 'gcode:pause');
+          }
+          else if(state === "paused"){
+            socket.emit('command', options.port, 'gcode:resume');
+          }
           break;
         case extraKeys.PREVIOUS: // Key: PREVIOUS_SONG
           if (feed_percentage >= min_feed + feed_percentage_increment) {
@@ -285,18 +297,18 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G00 Z10\n");
           break;
         case keys.X: // Key: X
-          var offset = -(
-            convert(tool_diameter).from(homing_unit).to("mm") / 2 +
-            probe_size
+          var offset = (
+            -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
+            PLATE_THICKNESS
           );
           socket.emit("write", options.port, "G38.2 F150 X700\n");
           socket.emit("write", options.port, "G92 X" + offset + "\n");
           socket.emit("write", options.port, "F3000\n");
           break;
         case keys.Y: // Key: Y
-          var offset = -(
-            convert(tool_diameter).from(homing_unit).to("mm") / 2 +
-            probe_size
+          var offset = (
+            -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
+            PLATE_THICKNESS
           );
           socket.emit("write", options.port, "G38.2 F150 Y700\n");
           socket.emit("write", options.port, "G92 Y" + offset + "\n");
@@ -388,7 +400,6 @@ var createServer = function (options) {
         socket.emit("write", options.port, cmd + "\n", (data) => {
           console.log(data); // data will be 'woot'
         });
-       
       });
     }
   });
