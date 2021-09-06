@@ -224,12 +224,14 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
           break;
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
-          if(store.controller.workflow.state === WORKFLOW_STATE_IDLE) {
-            socket.emit('command', options.port, 'gcode:start');
-          } else if(store.controller.workflow.state === WORKFLOW_STATE_RUNNING){
-            socket.emit('command', options.port, 'gcode:pause');
-          } else if(store.controller.workflow.state === WORKFLOW_STATE_PAUSED){
-            socket.emit('command', options.port, 'gcode:resume');
+          if(sender.status.name)
+            if(store.controller.workflow.state === WORKFLOW_STATE_IDLE) {
+              socket.emit('command', options.port, 'gcode:start');
+            } else if(store.controller.workflow.state === WORKFLOW_STATE_RUNNING){
+              socket.emit('command', options.port, 'gcode:pause');
+            } else if(store.controller.workflow.state === WORKFLOW_STATE_PAUSED){
+              socket.emit('command', options.port, 'gcode:resume');
+            }
           }
           break;
         case extraKeys.PREVIOUS: // Key: PREVIOUS_SONG
