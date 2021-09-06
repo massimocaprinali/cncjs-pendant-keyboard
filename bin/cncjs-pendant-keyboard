@@ -15,7 +15,6 @@ const mustache = require("mustache");
 const { command } = require("commander");
 var options = {};
 var gcodeFolder = path.join(__dirname, "../gcode");
-var status
 
 const PLATE_THICKNESS = 5;
 const WORKFLOW_STATE_RUNNING = 'running';
@@ -224,7 +223,7 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
           break;
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
-          if(sender.status.name) {
+          if(store.sender.status && store.sender.status.name) {
             if(store.controller.workflow.state === WORKFLOW_STATE_IDLE) {
               socket.emit('command', options.port, 'gcode:start');
             } else if(store.controller.workflow.state === WORKFLOW_STATE_RUNNING){
