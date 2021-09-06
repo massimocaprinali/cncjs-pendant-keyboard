@@ -224,7 +224,7 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G00 X0 Y0 Z0\n");
           break;
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
-          if(sender.status.name)
+          if(sender.status.name) {
             if(store.controller.workflow.state === WORKFLOW_STATE_IDLE) {
               socket.emit('command', options.port, 'gcode:start');
             } else if(store.controller.workflow.state === WORKFLOW_STATE_RUNNING){
