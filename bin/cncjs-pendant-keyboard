@@ -21,6 +21,11 @@ const WORKFLOW_STATE_RUNNING = 'running';
 const WORKFLOW_STATE_PAUSED = 'paused';
 const WORKFLOW_STATE_IDLE = 'idle';
 
+const STOP_COMMAND = "gcode:stop"
+const START_COMMAND = "gcode:start"
+const PAUSE_COMMAND = "gcode:pause"
+const RESUME_COMMAND = "gcode:resume"
+
 program
   .version(pkg.version)
   .usage("-s <secret> -p <port> [options]")
@@ -225,11 +230,11 @@ var createServer = function (options) {
         case extraKeys.PLAY_PAUSE: // Key: Play/Pause
           if(store.sender.status && store.sender.status.name) {
             if(store.controller.workflow.state === WORKFLOW_STATE_IDLE) {
-              socket.emit('command', options.port, 'gcode:start');
+              socket.emit('command', options.port, START_COMMAND);
             } else if(store.controller.workflow.state === WORKFLOW_STATE_RUNNING){
-              socket.emit('command', options.port, 'gcode:pause');
+              socket.emit('command', options.port, PAUSE_COMMAND);
             } else if(store.controller.workflow.state === WORKFLOW_STATE_PAUSED){
-              socket.emit('command', options.port, 'gcode:resume');
+              socket.emit('command', options.port, RESUME_COMMAND);
             }
           }
           break;
@@ -325,6 +330,12 @@ var createServer = function (options) {
           break;
         case keys.HOME:
           socket.emit("write", options.port, "G28 Y X\n");
+          break;
+        case keys.ESCAPE:
+          if(store.controller.workflow.state === WORKFLOW_STATE_PAUSED){
+            socket.emit('command', options.port, STOP_COMMAND);
+          }
+          break;
         default:
           break;
       }
