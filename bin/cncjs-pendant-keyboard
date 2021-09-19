@@ -16,7 +16,8 @@ const { command } = require("commander");
 var options = {};
 var gcodeFolder = path.join(__dirname, "../gcode");
 
-const PLATE_THICKNESS = 5;
+const Z_PLATE_THICKNESS = 5;
+const XY_PLATE_THICKNESS = 5;
 const WORKFLOW_STATE_RUNNING = 'running';
 const WORKFLOW_STATE_PAUSED = 'paused';
 const WORKFLOW_STATE_IDLE = 'idle';
@@ -260,12 +261,12 @@ var createServer = function (options) {
           break;
         case extraKeys.SEARCH: // FIND EDGE
           var view = {
-            margin: 20,
-            plateThickness: PLATE_THICKNESS,
+            margin: 30,
+            plateThickness: Z_PLATE_THICKNESS,
             offset: function () {
               return (
                 -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
-                PLATE_THICKNESS
+                XY_PLATE_THICKNESS
               );
             },
           };
@@ -310,7 +311,7 @@ var createServer = function (options) {
         case keys.X: // Key: X
           var offset = (
             -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
-            PLATE_THICKNESS
+            XY_PLATE_THICKNESS
           );
           socket.emit("write", options.port, "G38.2 F150 X700\n");
           socket.emit("write", options.port, "G92 X" + offset + "\n");
@@ -319,7 +320,7 @@ var createServer = function (options) {
         case keys.Y: // Key: Y
           var offset = (
             -(convert(tool_diameter).from(homing_unit).to("mm") / 2) -
-            PLATE_THICKNESS
+            XY_PLATE_THICKNESS
           );
           socket.emit("write", options.port, "G38.2 F150 Y700\n");
           socket.emit("write", options.port, "G92 Y" + offset + "\n");
