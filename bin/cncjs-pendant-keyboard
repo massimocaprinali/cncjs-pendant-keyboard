@@ -17,7 +17,7 @@ var options = {};
 var gcodeFolder = path.join(__dirname, "../gcode");
 
 const Z_PLATE_THICKNESS = 5;
-const XY_PLATE_THICKNESS = 5;
+const XY_PLATE_THICKNESS = 8;
 const WORKFLOW_STATE_RUNNING = 'running';
 const WORKFLOW_STATE_PAUSED = 'paused';
 const WORKFLOW_STATE_IDLE = 'idle';
