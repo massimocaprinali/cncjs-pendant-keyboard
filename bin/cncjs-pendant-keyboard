@@ -3,7 +3,7 @@
 var fs = require("fs");
 var path = require("path");
 var program = require("commander");
-var serialport = require("serialport");
+const { SerialPort } = require('serialport')
 var inquirer = require("inquirer");
 var pkg = require("../package.json");
 var serverMain = require("../index");
@@ -64,13 +64,13 @@ var options = {
 };
 
 if (options.list) {
-  serialport.list(function (err, ports) {
+  SerialPort.list(function (err, ports) {
     if (err) {
       console.error(err);
       process.exit(1);
     }
     ports.forEach(function (port) {
-      console.log(port.comName);
+      console.log(port.path);
     });
   });
   return;
@@ -428,13 +428,13 @@ if (options.port) {
   return;
 }
 
-serialport.list(function (err, ports) {
+SerialPort.list(function (err, ports) {
   if (err) {
     console.error(err);
     process.exit(1);
   }
   const choices = ports.map(function (port) {
-    return port.comName;
+    return port.path;
   });
 
   inquirer
