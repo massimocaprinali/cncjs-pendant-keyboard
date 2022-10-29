@@ -64,11 +64,7 @@ var options = {
 };
 
 if (options.list) {
-  SerialPort.list(function (err, ports) {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    }
+  SerialPort.list().then(function (ports) {
     ports.forEach(function (port) {
       console.log(port.path);
     });
@@ -428,11 +424,7 @@ if (options.port) {
   return;
 }
 
-SerialPort.list(function (err, ports) {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
+SerialPort.list().then(function (ports) {
   const choices = ports.map(function (port) {
     return port.path;
   });
