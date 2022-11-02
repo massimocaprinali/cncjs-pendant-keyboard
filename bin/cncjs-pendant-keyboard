@@ -334,7 +334,7 @@ var createServer = function (options) {
           }
           break;
         case keys.D: // Key: D
-          socket.emit("write", options.port, "G92 X19 Y10\n");
+          socket.emit("write", options.port, "G92 X20.506 Y-7.778\n");
           socket.emit("write", options.port, "G00 X0 Y0\n");
         default:
           break;
