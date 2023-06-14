@@ -322,6 +322,9 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G92 Y" + offset + "\n");
           socket.emit("write", options.port, "F3000\n");
           break;
+        case keys.Z: // Key: Y
+          socket.emit("write", options.port, "G28 Z\n");
+          break;
         case keys.ZERO: // Key: Home
           socket.emit("write", options.port, "G92 X0 Y0\n");
           break;
