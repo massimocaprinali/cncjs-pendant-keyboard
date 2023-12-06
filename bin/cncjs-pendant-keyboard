@@ -214,18 +214,13 @@ var createServer = function (options) {
           relativeMovement("Z", "up", kbdevent.move);
           break;
         case extraKeys.MEDIA_PLAY:
-          if (kbdevent.l_alt || kbdevent.r_alt) {
-            socket.emit("write", options.port, "M3\n");
-          } else {
-            socket.emit("write", options.port, "M106 P0\n");
-          }
+          socket.emit("write", options.port, "M106 P0\n");
+          break;
+        case extraKeys.INTERNET:
+          socket.emit("write", options.port, "M3\n");
           break;
         case extraKeys.MUTE:
-          if (kbdevent.l_alt || kbdevent.r_alt) {
-            socket.emit("write", options.port, "M5\n");
-          } else {
-            socket.emit("write", options.port, "M107\n");
-          }
+          socket.emit("write", options.port, "M107\nM5\n");
           break;
         case extraKeys.HOME:
           // Key: Home (Casa) -> Goto Zero-working position
