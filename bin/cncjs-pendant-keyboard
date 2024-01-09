@@ -199,11 +199,11 @@ var createServer = function (options) {
     function sendToController() {
       // Calculate move size modifiers
       kbdevent.move = kbdevent.default_move;
-      if (kbdevent.l_alt || kbdevent.r_alt) {
-        kbdevent.move = 0.1;
-      } else if (kbdevent.l_shift || kbdevent.r_shift || kbdevent.r_meta) {
-        kbdevent.move = 10;
-      }
+      // if (kbdevent.l_alt || kbdevent.r_alt) {
+      //   kbdevent.move = 0.1;
+      // } else if (kbdevent.l_shift || kbdevent.r_shift || kbdevent.r_meta) {
+      //   kbdevent.move = 10;
+      // }
 
       // Process pressed key
       switch (kbdevent.extra) {
@@ -329,7 +329,11 @@ var createServer = function (options) {
           socket.emit("write", options.port, "G28 Z\n");
           break;
         case keys.ZERO: // Key: Home
-          socket.emit("write", options.port, "G92 X0 Y0\n");
+          if (kbdevent.l_alt || kbdevent.r_alt) {
+            socket.emit("write", options.port, "G92 Z0\n");
+          } else {
+            socket.emit("write", options.port, "G92 X0 Y0\n");
+          }
           break;
         case keys.HOME:
           socket.emit("write", options.port, "G28 Y X\n");
