@@ -332,6 +332,7 @@ var createServer = function (options) {
           if (kbdevent.l_alt || kbdevent.r_alt) {
             socket.emit("write", options.port, "G92 Z0\n");
           } else {
+            socket.emit("write", options.port, "G60 S0\n");
             socket.emit("write", options.port, "G92 X0 Y0\n");
           }
           break;
