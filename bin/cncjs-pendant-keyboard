@@ -276,16 +276,32 @@ var createServer = function (options) {
 
       switch (kbdevent.key) {
         case keys.LEFT: // arrow: left
-          relativeMovement("X", "left", kbdevent.move);
+          if (kbdevent.l_control || kbdevent.r_control) {
+            relativeCut("X", "left", kbdevent.move);
+          } else {
+            relativeMovement("X", "left", kbdevent.move);
+          }
           break;
         case keys.RIGHT: // arrow: right
-          relativeMovement("X", "right", kbdevent.move);
+          if (kbdevent.l_control || kbdevent.r_control) {
+            relativeCut("X", "right", kbdevent.move);
+          } else {
+            relativeMovement("X", "right", kbdevent.move);
+          }
           break;
         case keys.UP: // arrow: up
-          relativeMovement("Y", "up", kbdevent.move);
+          if (kbdevent.l_control || kbdevent.r_control) {
+            relativeCut("Y", "up", kbdevent.move);
+          } else {
+            relativeMovement("Y", "up", kbdevent.move);
+          }
           break;
         case keys.DOWN: // arrow: down
-          relativeMovement("Y", "down", kbdevent.move);
+          if (kbdevent.l_control || kbdevent.r_control) {
+            relativeCut("Y", "down", kbdevent.move);
+          } else {
+            relativeMovement("Y", "down", kbdevent.move);
+          }
           break;
         case keys.F1: // key: F1
           kbdevent.default_move = 0.1;
@@ -398,6 +414,22 @@ var createServer = function (options) {
           move +
           "\n"
       );
+      socket.emit("write", options.port, "G90\n");
+    }
+
+    function relativeCut(axis, direction, move) {
+      socket.emit("write", options.port, "G91\n");
+      socket.emit("write", options.port, "M3 S255\n")
+      socket.emit(
+        "write",
+        options.port,
+        "G1 " +
+          axis +
+          (direction == "left" || direction == "down" ? "-" : "") +
+          move +
+          "\n"
+      );
+      socket.emit("write", options.port, "M5\n")
       socket.emit("write", options.port, "G90\n");
     }
 
