@@ -196,6 +196,10 @@ var createServer = function (options) {
       sendToController();
     });
 
+    function stopLaser() {
+      socket.emit("write", options.port, "M5\n");
+    }
+
     function sendToController() {
       // Calculate move size modifiers
       kbdevent.move = kbdevent.default_move;
@@ -217,7 +221,8 @@ var createServer = function (options) {
           socket.emit("write", options.port, "M106 P0\n");
           break;
         case extraKeys.INTERNET:
-          socket.emit("write", options.port, "M3\n");
+          socket.emit("write", options.port, "M3 S10\n");
+          setTimeout(stopLaser, 1000);
           break;
         case extraKeys.MUTE:
           socket.emit("write", options.port, "M107\nM5\n");
@@ -437,6 +442,14 @@ var createServer = function (options) {
       return b ? gcd(b, a % b) : a;
     }
 
+
+    // Assisted by WCA for GP
+    // Latest GenAI contribution: granite-20B-code-instruct-v2 model
+    /**
+     * Converts a decimal number to a fraction. Returns a JSON object with the numerator, denominator, and display value of the simplified fraction.
+     * @param {number} _decimal - A decimal number to be converted.
+     * @returns {object} An object containing the numerator, denominator, and display value of the simplified fraction.
+     */
     var decimalToFraction = function (_decimal) {
       var top = _decimal.toString().replace(/\d+[.]/, "");
       var bottom = Math.pow(10, top.length);
