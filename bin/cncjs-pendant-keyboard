@@ -100,6 +100,7 @@ var kbdevent = {
   can_repeat: 1, // If can repeat
   move: 1, // Actually move size
   default_move: 1, // Alter by F1, F2, F3
+  default_lasercut_feed: 300, // Default lasercut feedrate
 };
 
 var createServer = function (options) {
@@ -200,9 +201,14 @@ var createServer = function (options) {
       socket.emit("write", options.port, "M5\n");
     }
 
+    function logToLCD(message) {
+      socket.emit("write", options.port, "M117 " + message + "\n");
+    }
+
     function sendToController() {
       // Calculate move size modifiers
       kbdevent.move = kbdevent.default_move;
+      kbdevent.lasercut_feed = kbdevent.default_lasercut_feed || 300;
       // if (kbdevent.l_alt || kbdevent.r_alt) {
       //   kbdevent.move = 0.1;
       // } else if (kbdevent.l_shift || kbdevent.r_shift || kbdevent.r_meta) {
@@ -282,43 +288,59 @@ var createServer = function (options) {
       switch (kbdevent.key) {
         case keys.LEFT: // arrow: left
           if (kbdevent.l_control || kbdevent.r_control) {
-            relativeCut("X", "left", kbdevent.move);
+            relativeCut("X", "left", kbdevent.move, kbdevent.lasercut_feed);
           } else {
             relativeMovement("X", "left", kbdevent.move);
           }
           break;
         case keys.RIGHT: // arrow: right
           if (kbdevent.l_control || kbdevent.r_control) {
-            relativeCut("X", "right", kbdevent.move);
+            relativeCut("X", "right", kbdevent.move, kbdevent.lasercut_feed);
           } else {
             relativeMovement("X", "right", kbdevent.move);
           }
           break;
         case keys.UP: // arrow: up
           if (kbdevent.l_control || kbdevent.r_control) {
-            relativeCut("Y", "up", kbdevent.move);
+            relativeCut("Y", "up", kbdevent.move, kbdevent.lasercut_feed);
           } else {
             relativeMovement("Y", "up", kbdevent.move);
           }
           break;
         case keys.DOWN: // arrow: down
           if (kbdevent.l_control || kbdevent.r_control) {
-            relativeCut("Y", "down", kbdevent.move);
+            relativeCut("Y", "down", kbdevent.move, kbdevent.lasercut_feed);
           } else {
             relativeMovement("Y", "down", kbdevent.move);
           }
           break;
         case keys.F1: // key: F1
           kbdevent.default_move = 0.1;
+          logToLCD("Move: 0.1x");
           break;
         case keys.F2: // key: F2
           kbdevent.default_move = 1;
+          logToLCD("Move: 1x");
           break;
         case keys.F3: // key: F3
           kbdevent.default_move = 10;
+          logToLCD("Move: 10x");
           break;
         case keys.F4: // key: F4
           kbdevent.default_move = 100;
+          logToLCD("Move: 100x");
+          break;
+        case keys.F5: // key: F5
+          kbdevent.default_lasercut_feed = 150;
+          logToLCD("Laser Feed: 150 (6mm)");
+          break;
+        case keys.F6: // key: F6
+          kbdevent.default_lasercut_feed = 250;
+          logToLCD("Laser Feed: 250 (4mm)");
+          break;
+        case keys.F7: // key: F7
+          kbdevent.default_lasercut_feed = 350;
+          logToLCD("Laser Feed: 350 (3mm)");
           break;
         case keys.OK: // Key: OK or Enter
           kbdevent.can_repeat = kbdevent.can_repeat ? 0 : 1;
@@ -394,8 +416,8 @@ var createServer = function (options) {
       if (
         (kbdevent.extra || kbdevent.key) &&
         kbdevent.can_repeat &&
-        kbdevent.key != 40 && // Key: Enter / OK -- change repeat function
-        kbdevent.extra != 148 // Special Key: Home -- goto Zero-working position
+        kbdevent.key != keys.OK && // Key: Enter / OK -- change repeat function
+        kbdevent.extra != extraKeys.HOME // Special Key: Home -- goto Zero-working position
       ) {
         if (!kbdevent.repeating) {
           kbdevent.repeating = 1;
@@ -422,7 +444,7 @@ var createServer = function (options) {
       socket.emit("write", options.port, "G90\n");
     }
 
-    function relativeCut(axis, direction, move) {
+    function relativeCut(axis, direction, move, feedrate) {
       socket.emit("write", options.port, "G91\n");
       socket.emit("write", options.port, "M3 S255\n")
       socket.emit(
@@ -432,6 +454,7 @@ var createServer = function (options) {
           axis +
           (direction == "left" || direction == "down" ? "-" : "") +
           move +
+          " F" + feedrate +
           "\n"
       );
       socket.emit("write", options.port, "M5\n")
