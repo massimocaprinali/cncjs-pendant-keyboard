@@ -12,6 +12,8 @@ var convert = require("convert-units");
 var keys = require("../keys");
 var extraKeys = require("../extraKeys");
 const mustache = require("mustache");
+const log = require("../logger");
+
 const { command } = require("commander");
 var options = {};
 var gcodeFolder = path.join(__dirname, "../gcode");
@@ -49,9 +51,11 @@ program
     "--access-token-lifetime <lifetime>",
     "access token lifetime in seconds or a time span string (default: 30d)",
     "30d"
-  );
+  )
+  .option("-v, --verbose", "verbose logging (serial traffic, HID events)");
 
 program.parse(process.argv);
+log.setVerbose(program.verbose);
 
 var options = {
   secret: program.secret,
@@ -105,6 +109,11 @@ var kbdevent = {
 
 var createServer = function (options) {
   serverMain(options, function (err, socket) {
+    if (err) {
+      log.error(err.message);
+      process.exit(1);
+    }
+
     // Grbl
     socket.on("Grbl:state", function (state) {
       store.controller.state = state;
@@ -131,7 +140,7 @@ var createServer = function (options) {
 
     // Marlin
     socket.on("Marlin:state", function (state) {
-      console.log("Marlin:state=>" + JSON.stringify(state))
+      log.debug("Marlin:state=>" + JSON.stringify(state))
       store.controller.state = state;
     });
     socket.on("Marlin:settings", function (settings) {
@@ -140,29 +149,65 @@ var createServer = function (options) {
 
     // Sender
     socket.on("sender:status", function (data) {
-      console.log("sender:status=>" + JSON.stringify(data));
+      log.debug("sender:status=>" + JSON.stringify(data));
       store.sender.status = data;
     });
 
     // Workflow state
     socket.on("workflow:state", function(state) {
-      console.log("workflow:state=>" + state);
+      log.info("workflow:state=>" + state);
       store.controller.workflow.state = state;
     });
 
-    const findPath = (interface) =>
-      hid
-        .devices()
-        .find(
-          (item) =>
-            item.vendorId === 6551 &&
-            item.productId === 9267 &&
-            item.interface === interface
-        ).path;
+    const KEYBOARD_VENDOR_ID = 6551;
+    const KEYBOARD_PRODUCT_ID = 9267;
 
-    console.log("Keyboard HID Address:", findPath(0), " & ", findPath(1));
-    var keyboard_main = new hid.HID(findPath(0));
-    var keyboard_extra = new hid.HID(findPath(1));
+    const findPath = (interface) => {
+      const devices = hid.devices();
+      const found = devices.find(
+        (item) =>
+          item.vendorId === KEYBOARD_VENDOR_ID &&
+          item.productId === KEYBOARD_PRODUCT_ID &&
+          item.interface === interface
+      );
+      if (!found) {
+        log.error(
+          "HID keyboard not found (vendorId=" + KEYBOARD_VENDOR_ID +
+          " productId=" + KEYBOARD_PRODUCT_ID + " interface=" + interface + ")"
+        );
+        log.error("HID devices seen by node-hid (" + devices.length + "):");
+        devices.forEach(function (d) {
+          log.error(
+            "  vendorId=" + d.vendorId + " productId=" + d.productId +
+            " interface=" + d.interface + " product=" + JSON.stringify(d.product) +
+            " path=" + d.path
+          );
+        });
+        process.exit(1);
+      }
+      return found.path;
+    };
+
+    const openHid = (devicePath) => {
+      try {
+        const device = new hid.HID(devicePath);
+        device.on("error", function (e) {
+          log.error("HID device " + devicePath + " error: " + e.message);
+        });
+        return device;
+      } catch (e) {
+        log.error("Cannot open HID device " + devicePath + ": " + e.message);
+        log.error("Check permissions on /dev/hidraw* (udev rule or sudo).");
+        process.exit(1);
+      }
+    };
+
+    const pathMain = findPath(0);
+    const pathExtra = findPath(1);
+    log.info("Keyboard HID addresses: " + pathMain + " & " + pathExtra);
+    var keyboard_main = openHid(pathMain);
+    var keyboard_extra = openHid(pathExtra);
+    log.info("Keyboard ready, waiting for key presses");
 
     var tool_diameter = 6;
     var homing_unit = "mm";
@@ -186,6 +231,7 @@ var createServer = function (options) {
       recv.shift();
       kbdevent.key = recv.shift();
       kbdevent.repeating = 0;
+      log.debug("HID main: key=" + kbdevent.key + " modifiers=" + bits);
       sendToController();
     });
 
@@ -194,6 +240,7 @@ var createServer = function (options) {
       recv.shift();
       kbdevent.extra = recv.shift();
       kbdevent.repeating = 0;
+      log.debug("HID extra: extra=" + kbdevent.extra);
       sendToController();
     });
 
@@ -494,7 +541,7 @@ var createServer = function (options) {
       var commands = rendered.split("\n");
       commands.forEach((cmd) => {
         socket.emit("write", options.port, cmd + "\n", (data) => {
-          console.log(data); // data will be 'woot'
+          log.debug("write ack: " + data);
         });
       });
     }

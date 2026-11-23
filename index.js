@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const io = require('socket.io-client');
+const log = require('./logger');
 const jwt = require('jsonwebtoken');
 const get = require('lodash.get');
 
@@ -33,60 +34,75 @@ module.exports = function(options, callback) {
         try {
             const config = JSON.parse(fs.readFileSync(cncrc, 'utf8'));
             options.secret = config.secret;
+            log.info('Secret read from ' + cncrc);
         } catch (err) {
-            console.error(err);
+            log.error('Cannot read secret from ' + cncrc + ' (HOME=' + getUserHome() + '): ' + err.message);
+            log.error('Pass it with CNCJS_SECRET or make sure ~/.cncrc exists for the current user (with sudo use "sudo -E").');
             process.exit(1);
         }
+    } else {
+        log.info('Secret provided by option/environment');
     }
 
     const token = generateAccessToken({ id: '', name: 'cncjs-pendant' }, options.secret, options.accessTokenLifetime);
-    const url = 'ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token;
+    const url = 'ws://' + options.socketAddress + ':' + options.socketPort;
 
-    socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
+    log.info('Connecting to cncjs at ' + url + ' (controller: ' + options.controllerType + ', port: ' + options.port + ', baudrate: ' + options.baudrate + ')');
+
+    socket = io.connect(url, {
         'query': 'token=' + token
     });
 
     socket.on('connect', () => {
-        console.log('Connected to ' + url);
+        log.info('Connected to ' + url);
 
         // Open port
+        log.info('Opening serial port "' + options.port + '"...');
         socket.emit('open', options.port, {
             baudrate: Number(options.baudrate),
             controllerType: options.controllerType
         });
     });
 
+    socket.on('connect_error', (err) => {
+        log.error('Cannot connect to ' + url + ': ' + ((err && err.message) || err) + ' (is cncjs running? is the secret correct?)');
+    });
+
+    socket.on('connect_timeout', () => {
+        log.error('Connection to ' + url + ' timed out');
+    });
+
+    socket.on('reconnect_attempt', (attempt) => {
+        log.warn('Reconnecting to ' + url + ' (attempt ' + attempt + ')');
+    });
+
     socket.on('error', (err) => {
-        console.error('Connection error.');
-        if (socket) {
-            socket.destroy();
-            socket = null;
-        }
+        log.error('Socket error: ' + ((err && err.message) || err));
     });
 
-    socket.on('close', () => {
-        console.log('Connection closed.');
+    socket.on('disconnect', (reason) => {
+        log.warn('Disconnected from ' + url + (reason ? ' (' + reason + ')' : ''));
     });
 
-    socket.on('serialport:open', function(options) {
-        options = options || {};
+    socket.on('serialport:open', function(data) {
+        data = data || {};
 
-        console.log('Connected to port "' + options.port + '" (Baud rate: ' + options.baudrate + ')');
+        log.info('Serial port "' + data.port + '" open (baud rate: ' + data.baudrate + ')');
 
         callback(null, socket);
     });
 
-    socket.on('serialport:error', function(options) {
-        callback(new Error('Error opening serial port "' + options.port + '"'));
+    socket.on('serialport:error', function(data) {
+        data = data || {};
+        callback(new Error('Error opening serial port "' + (data.port || options.port) + '" (check the port name, its permissions, and that no other program uses it)'));
     });
 
     socket.on('serialport:read', function(data) {
-        console.log((data || '').trim());
+        log.debug('<< ' + (data || '').trim());
     });
 
-
     socket.on('serialport:write', function(data) {
-        console.log((data || '').trim());
+        log.debug('>> ' + (data || '').trim());
     });
 
 };
