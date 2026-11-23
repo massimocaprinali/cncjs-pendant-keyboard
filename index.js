@@ -53,6 +53,18 @@ module.exports = function(options, callback) {
         'query': 'token=' + token
     });
 
+    // Log every incoming event (socket.io-client 1.x has no onAny)
+    const onevent = socket.onevent;
+    socket.onevent = function(packet) {
+        const args = (packet && packet.data) || [];
+        if (!/^(serialport:(read|write)|(Grbl|Smoothie|TinyG|Marlin):(state|settings)|sender:status)$/.test(args[0])) {
+            log.debug('event: ' + JSON.stringify(args).slice(0, 300));
+        }
+        return onevent.call(this, packet);
+    };
+
+    let portOpened = false;
+
     socket.on('connect', () => {
         log.info('Connected to ' + url);
 
@@ -62,6 +74,12 @@ module.exports = function(options, callback) {
             baudrate: Number(options.baudrate),
             controllerType: options.controllerType
         });
+
+        setTimeout(() => {
+            if (!portOpened) {
+                log.warn('No answer from cncjs 10s after "open ' + options.port + '". Possible causes: the port is already open in cncjs (close it from the web UI or use the same baudrate/controller), wrong controller type (--controller-type), or the port does not exist.');
+            }
+        }, 10000);
     });
 
     socket.on('connect_error', (err) => {
@@ -86,6 +104,7 @@ module.exports = function(options, callback) {
 
     socket.on('serialport:open', function(data) {
         data = data || {};
+        portOpened = true;
 
         log.info('Serial port "' + data.port + '" open (baud rate: ' + data.baudrate + ')');
 
