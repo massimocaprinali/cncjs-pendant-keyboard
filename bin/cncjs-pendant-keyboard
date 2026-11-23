@@ -228,7 +228,7 @@ var createServer = function (options) {
           break;
         case extraKeys.INTERNET:
           socket.emit("write", options.port, "M3 S10\n");
-          setTimeout(stopLaser, 10000);
+          setTimeout(stopLaser, 500);
           break;
         case extraKeys.MUTE:
           socket.emit("write", options.port, "M107\nM5\n");
